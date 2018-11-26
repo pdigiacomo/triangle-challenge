@@ -23,14 +23,14 @@ public class DefaultScannerProvider implements ScannerProvider {
 	
 	@Override
 	public List<TriangleScanner> getTriangleScanners() {
-//		System.out.println("\nSearching for scanner plugins..");
+		System.out.println("\nSearching for scanner plugins..");
 		List<TriangleScanner> triangleScanners = new ArrayList<>();
 		List<Class<? extends TriangleScanner>> triangleScannerClasses = new ArrayList<>();
 		List<File> jarFiles = null;
 		try {
 			jarFiles = findJarFiles(CURRENT_DIR);
 		} catch (URISyntaxException e) {
-//			System.err.println("Error while getting this jar's file name: "+e.getMessage()+"\nPlugin search aborted.\n");
+			System.err.println("Error while getting this jar's file name: "+e.getMessage()+"\nPlugin search aborted.\n");
 			return triangleScanners;
 		}
 		try (URLClassLoader classLoader = getJarClassLoader(jarFiles)) {
@@ -38,20 +38,20 @@ public class DefaultScannerProvider implements ScannerProvider {
 				triangleScannerClasses = loadClassFiles(jarFile, classLoader);
 			}
 		} catch (IOException e) {
-//			System.err.println("I/O error on jar files: "+e.getMessage()+"\nplugin search aborted.\n");
+			System.err.println("I/O error on jar files: "+e.getMessage()+"\nplugin search aborted.\n");
 			return triangleScanners;
 		}
 		for (Class<? extends TriangleScanner> triangleScannerClass : triangleScannerClasses) {
 			try {
-//				System.out.format("Found scanner plugin: %s ", triangleScannerClass.getSimpleName());
+				System.out.format("Found scanner plugin: %s ", triangleScannerClass.getSimpleName());
 				triangleScanners.add(triangleScannerClass.newInstance());
-//				System.out.format("[loaded]\n");
+				System.out.format("[loaded]\n");
 			} catch (InstantiationException | IllegalAccessException e) {
-//				System.out.format("[error]\n");
+				System.out.format("[error]\n");
 				continue;
 			}
 		}
-//		System.out.format("%d plugins loaded.\n", triangleScanners.size());
+		System.out.format("%d plugins loaded.\n", triangleScanners.size());
 		return triangleScanners;
 	}
 	
