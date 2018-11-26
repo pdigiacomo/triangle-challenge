@@ -12,7 +12,7 @@ public class ValidityFormatter extends ResultFormatter {
 		if (e != null) {
 			System.out.format("Error: %s\n", e.getMessage());
 		} else {
-			System.out.format("ValidityScanner: Triangle is valid\n");
+			System.out.format("Triangle is valid\n");
 		}
 	}
 }

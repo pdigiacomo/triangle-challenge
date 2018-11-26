@@ -9,13 +9,15 @@ import dgcplg.tradeshift.trianglechallenge.util.ScannerProvider;
 
 public class TriangleChallenge {
 	public static void main(String[] args) {
-		// TODO implement user prompt with Reader r = new InputStreamReader(System.in); question:"Please input side lengths of the triangle:"
+		if (args.length < 3) {
+			System.out.println("Usage: java -jar [this_jar_name.jar] no1 no2 no3");
+		}
 		double[] sideLengths = new double[3];
 		for (int i=0; i<3; i++) {
 			try {
 				sideLengths[i] = Double.parseDouble(args[i]);
 			} catch (NumberFormatException e) {
-				System.out.format("Length %d is invalid - %s", i+1, e.getMessage());
+				System.out.format("Length %d is invalid or not numerical", i+1);
 				return;
 			}
 		}
@@ -30,6 +32,7 @@ public class TriangleChallenge {
 			validityScanner.getFormatter().format(validityResult);
 			return;
 		}
+		System.out.format("\n%s: ", validityScanner.getName());
 		validityScanner.getFormatter().format(validityResult);
 		
 		
@@ -44,6 +47,7 @@ public class TriangleChallenge {
 				result = new ScanResult();
 				result.setScanException(e);
 			}
+			System.out.format("\n%s: ",scanner.getName());
 			scanner.getFormatter().format(result);
 		}
 	}

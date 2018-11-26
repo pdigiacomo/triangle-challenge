@@ -27,8 +27,10 @@ public class SideScanner extends TriangleScanner {
 		} else {
 			if (b == c) {
 				scanResult.setTriangle(new IsoscelesTriangle(b, a));
+			} else if (a == c){
+				scanResult.setTriangle(new IsoscelesTriangle(a, b));
 			} else {
-				scanResult.setTriangle(new ScaleneTriangle(a, b, c));
+				scanResult.setTriangle(new ScaleneTriangle(a,b,c));
 			}
 		}
 		return scanResult;
