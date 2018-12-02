@@ -4,12 +4,9 @@ import dgcplg.tradeshift.trianglechallenge.Triangle;
 
 public class ScaleneTriangle extends Triangle {
 
-	public ScaleneTriangle(double sideA, double sideB, double sideC) {
-		super(sideA, sideB, sideC);
-	}
-
-	@Override
-	public String getSideType() {
-		return "scalene";
+	public ScaleneTriangle(Double sideA, Double sideB, Double sideC) {
+		getDataMap().put("A", sideA);
+		getDataMap().put("B", sideB);
+		getDataMap().put("C", sideC);
 	}
 }

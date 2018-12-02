@@ -4,13 +4,9 @@ import dgcplg.tradeshift.trianglechallenge.Triangle;
 
 public class IsoscelesTriangle extends Triangle {
 
-	public IsoscelesTriangle(double sideAB, double sideC) {
-		super(sideAB, sideAB, sideC);
+	public IsoscelesTriangle(Double sideAB, Double sideC) {
+		getDataMap().put("A", sideAB);
+		getDataMap().put("B", sideAB);
+		getDataMap().put("C", sideC);
 	}
-
-	@Override
-	public String getSideType() {
-		return "isosceles";
-	}
-
 }
