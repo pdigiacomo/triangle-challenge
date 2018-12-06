@@ -2,98 +2,68 @@ package dgcplg.tradeshift.trianglechallenge.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.JarEntry;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import dgcplg.tradeshift.trianglechallenge.TriangleScanner;
 
 public class DefaultScannerProvider implements ScannerProvider {
-
-	private static final String CURRENT_DIR = ".";
-	private static final String PKG_PREFIX = "dgcplg/tradeshift/trianglechallenge";
-	private static final String CLASS_EXT = ".class";
+	private static Logger logger = LoggerFactory.getLogger(DefaultScannerProvider.class);
 	
+	private static final String SEARCH_DIR = ".";
+
 	@Override
-	public List<TriangleScanner> getTriangleScanners() {
-		System.out.println("\nSearching for scanner plugins..");
-		List<TriangleScanner> triangleScanners = new ArrayList<>();
-		List<Class<? extends TriangleScanner>> triangleScannerClasses = new ArrayList<>();
-		List<File> jarFiles = null;
-		try {
-			jarFiles = findJarFiles(CURRENT_DIR);
-		} catch (URISyntaxException e) {
-			System.err.println("Error while getting this jar's file name: "+e.getMessage()+"\nPlugin search aborted.\n");
-			return triangleScanners;
-		}
-		try (URLClassLoader classLoader = getJarClassLoader(jarFiles)) {
-			for (File jarFile: jarFiles) {
-				triangleScannerClasses = loadClassFiles(jarFile, classLoader);
+	public Set<TriangleScanner> getTriangleScanners() {
+		logger.info("Searching for scanner plugins..");
+		Set<Class<?>> loadedClasses = new HashSet<>();
+		Set<Class<? extends TriangleScanner>> triangleScannerClasses = new HashSet<>();
+		Set<TriangleScanner> triangleScanners = new HashSet<>();
+		File[] jarFiles = findJarFiles(SEARCH_DIR);
+		try (JarClassLoader classLoader = new JarClassLoader(jarFiles)) {
+			for (File jarFile : jarFiles) {
+				try {
+					loadedClasses.addAll(classLoader.loadJarClass(jarFile));
+				} catch (IOException e) {
+					logger.warn("Error accessing jar file {}, skipping file..", jarFile.getName(), e);
+				} catch (JarClassesNotFoundException e) {
+					String excMsg = e.getClassNotFoundExceptions().stream().map(exc -> exc.getMessage()).collect(Collectors.joining("; "));
+					logger.warn("Error while loading classes from jar file {}: {}", e.getJarFile(), excMsg);
+				}
 			}
 		} catch (IOException e) {
-			System.err.println("I/O error on jar files: "+e.getMessage()+"\nplugin search aborted.\n");
-			return triangleScanners;
+			logger.warn("Class loader not properly closed", e);
 		}
+		triangleScannerClasses = loadedClasses.stream()
+				.filter(klazz -> TriangleScanner.class.isAssignableFrom(klazz))
+				.map(tsKlazz -> (Class<? extends TriangleScanner>)tsKlazz.asSubclass(TriangleScanner.class))
+				.collect(Collectors.toSet());
+		int nLoaded = triangleScannerClasses.size();
 		for (Class<? extends TriangleScanner> triangleScannerClass : triangleScannerClasses) {
 			try {
-				System.out.format("Found scanner plugin: %s ", triangleScannerClass.getSimpleName());
 				triangleScanners.add(triangleScannerClass.newInstance());
-				System.out.format("[loaded]\n");
+				logger.info("Found scanner plugin: {} [loaded]", triangleScannerClass.getSimpleName());
 			} catch (InstantiationException | IllegalAccessException e) {
-				System.out.format("[error]\n");
-				continue;
+				logger.info("Found scanner plugin: {} [error: {}]", triangleScannerClass.getSimpleName(), e.getMessage());
+				nLoaded --;
 			}
 		}
-		System.out.format("%d plugins loaded.\n", triangleScanners.size());
+		logger.info("{} plugins loaded.", nLoaded);
 		return triangleScanners;
 	}
-	
-	private List<File> findJarFiles(String dirpath) throws URISyntaxException {
+
+	private File[] findJarFiles(String dirpath) {
 		File searchdir = new File(dirpath);
 		if (dirpath == null || !searchdir.isDirectory()) {
-			throw new IllegalArgumentException("Argument must be a valid directory path");
+			throw new IllegalArgumentException(dirpath+" is not a valid directory path");
 		}
-		String thisJarFilename = Paths.get(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).toFile().getName();
-		File[] files = searchdir.listFiles((File f, String fname) -> !f.isFile() && f.canRead() && !f.isHidden()
-				&& !fname.equals(thisJarFilename) && fname.endsWith(".jar"));
-		return Arrays.asList(files);
-	}
-
-	private URLClassLoader getJarClassLoader(List<File> jarFiles) throws MalformedURLException {
-		URL[] fileURLs = new URL[jarFiles.size()];
-		for (int i=0; i<jarFiles.size(); i++) {
-			fileURLs[i] = jarFiles.get(i).toURI().toURL();
-		}
-		return new URLClassLoader(fileURLs, getClass().getClassLoader());
-	}
-	
-	private List<Class<? extends TriangleScanner>> loadClassFiles(File jarFile, ClassLoader classLoader) throws IOException {
-		List<Class<? extends TriangleScanner>> triangleScannerClasses = new ArrayList<>();
-		Enumeration<JarEntry> jarClassFiles = null;
-		try (FilteredJarFile filteredJarFile = new FilteredJarFile(jarFile.getName())) {
-			jarClassFiles = filteredJarFile.entries((JarEntry jarEntry) -> jarEntry.getName().startsWith(PKG_PREFIX) && jarEntry.getName().endsWith(CLASS_EXT));
-			while (jarClassFiles.hasMoreElements()) {
-				String classEntry = jarClassFiles.nextElement().getName();
-				String className = classEntry.replaceAll("/", "\\.").substring(0,
-						classEntry.length() - CLASS_EXT.length());
-				Class<?> klass = null;
-				try {
-					klass = classLoader.loadClass(className);
-				} catch (ClassNotFoundException e) {
-					continue;
-				}
-				if (TriangleScanner.class.isAssignableFrom(klass)) {
-					triangleScannerClasses.add(klass.asSubclass(TriangleScanner.class));
-				}
-			}
-		}
-		return triangleScannerClasses;
+		String thisJarsFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+		String thisJarsFilename = thisJarsFilePath.substring(thisJarsFilePath.lastIndexOf("/")+1);
+		File[] files = searchdir.listFiles(
+				(File f, String fname) -> !f.isFile() && f.canRead() && !f.isHidden() && !fname.equals(thisJarsFilename) && fname.endsWith(".jar"));
+		return files;
 	}
 }

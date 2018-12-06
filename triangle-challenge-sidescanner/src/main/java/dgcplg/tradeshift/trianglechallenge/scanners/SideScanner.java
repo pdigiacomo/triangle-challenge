@@ -16,7 +16,6 @@ import dgcplg.tradeshift.trianglechallenge.triangles.IsoscelesTriangle;
 import dgcplg.tradeshift.trianglechallenge.triangles.ScaleneTriangle;
 
 public class SideScanner extends TriangleScanner {
-	private static final String ITE_EXC_MSG = "Degenerate triangle: %s + %s <= %s";
 	private SideFormatter sideFormatter;
 	private List<String> inputParams;
 	
@@ -54,11 +53,11 @@ public class SideScanner extends TriangleScanner {
 		double b = dataMap.get("B");
 		double c = dataMap.get("C");
 		if (a + b <= c) {
-			throw new InvalidTriangleException(String.format(ITE_EXC_MSG, a, b, c));
+			throw new InvalidTriangleException("Degenerate triangle: A("+a+") + B("+b+") <= C("+c+")");
 		} else if (b + c <= a) {
-			throw new InvalidTriangleException(String.format(ITE_EXC_MSG, b, c, a));
+			throw new InvalidTriangleException("Degenerate triangle: B("+b+") + C("+c+") <= A("+a+")");
 		} else if (a + c <= b) {
-			throw new InvalidTriangleException(String.format(ITE_EXC_MSG, a, c, b));
+			throw new InvalidTriangleException("Degenerate triangle: A("+a+") + C("+c+") <= B("+b+")");
 		}
 	}
 	

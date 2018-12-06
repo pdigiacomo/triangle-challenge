@@ -1,15 +1,25 @@
 package dgcplg.tradeshift.trianglechallenge;
 
-import java.util.List;
+import java.util.Set;
 
 import dgcplg.tradeshift.trianglechallenge.exceptions.ScanException;
 import dgcplg.tradeshift.trianglechallenge.util.DefaultScannerProvider;
 import dgcplg.tradeshift.trianglechallenge.util.ScannerProvider;
 
 public class TriangleChallenge {
+	private Set<TriangleScanner> scanners;
+	
 	public static void main(String[] args) {
+		TriangleChallenge triangleChallenge = new TriangleChallenge();
+		triangleChallenge.run();
+	}
+	
+	public TriangleChallenge() {
 		ScannerProvider scannerProvider = new DefaultScannerProvider();
-		List<TriangleScanner> scanners = scannerProvider.getTriangleScanners();
+		scanners = scannerProvider.getTriangleScanners();
+	}
+	
+	public void run() {
 		Triangle triangle = new Triangle();
 		
 		for (TriangleScanner scanner: scanners) {

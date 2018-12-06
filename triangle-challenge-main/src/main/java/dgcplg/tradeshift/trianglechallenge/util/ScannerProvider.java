@@ -1,9 +1,9 @@
 package dgcplg.tradeshift.trianglechallenge.util;
 
-import java.util.List;
+import java.util.Set;
 
 import dgcplg.tradeshift.trianglechallenge.TriangleScanner;
 
 public interface ScannerProvider {
-	public List<TriangleScanner> getTriangleScanners();
+	public Set<TriangleScanner> getTriangleScanners();
 }
