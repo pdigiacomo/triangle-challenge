@@ -5,6 +5,7 @@ import java.util.Set;
 import dgcplg.tradeshift.trianglechallenge.exceptions.ScanException;
 import dgcplg.tradeshift.trianglechallenge.util.DefaultScannerProvider;
 import dgcplg.tradeshift.trianglechallenge.util.ScannerProvider;
+import dgcplg.tradeshift.trianglechallenge.util.ScannerProviderException;
 
 public class TriangleChallenge {
 	private Set<TriangleScanner> scanners;
@@ -16,7 +17,12 @@ public class TriangleChallenge {
 	
 	public TriangleChallenge() {
 		ScannerProvider scannerProvider = new DefaultScannerProvider();
-		scanners = scannerProvider.getTriangleScanners();
+		try {
+			scanners = scannerProvider.getTriangleScanners();
+		} catch (ScannerProviderException e) {
+			String warnMsg = "WARNING: One or more scanners might not have been loaded. Please see log file for details";
+			System.out.format("\n%s.\n\n", warnMsg);
+		}
 	}
 	
 	public void run() {

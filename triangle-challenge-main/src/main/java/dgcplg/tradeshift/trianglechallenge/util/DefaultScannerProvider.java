@@ -17,7 +17,8 @@ public class DefaultScannerProvider implements ScannerProvider {
 	private static final String SEARCH_DIR = ".";
 
 	@Override
-	public Set<TriangleScanner> getTriangleScanners() {
+	public Set<TriangleScanner> getTriangleScanners() throws ScannerProviderException {
+		boolean excOccurred = false;
 		logger.info("Searching for scanner plugins..");
 		Set<Class<?>> loadedClasses = new HashSet<>();
 		Set<Class<? extends TriangleScanner>> triangleScannerClasses = new HashSet<>();
@@ -29,13 +30,16 @@ public class DefaultScannerProvider implements ScannerProvider {
 					loadedClasses.addAll(classLoader.loadJarClass(jarFile));
 				} catch (IOException e) {
 					logger.warn("Error accessing jar file {}, skipping file..", jarFile.getName(), e);
+					excOccurred = true;
 				} catch (JarClassesNotFoundException e) {
 					String excMsg = e.getClassNotFoundExceptions().stream().map(exc -> exc.getMessage()).collect(Collectors.joining("; "));
 					logger.warn("Error while loading classes from jar file {}: {}", e.getJarFile(), excMsg);
+					excOccurred = true;
 				}
 			}
 		} catch (IOException e) {
 			logger.warn("Class loader not properly closed", e);
+			excOccurred = true;
 		}
 		triangleScannerClasses = loadedClasses.stream()
 				.filter(klazz -> TriangleScanner.class.isAssignableFrom(klazz))
@@ -49,9 +53,13 @@ public class DefaultScannerProvider implements ScannerProvider {
 			} catch (InstantiationException | IllegalAccessException e) {
 				logger.info("Found scanner plugin: {} [error: {}]", triangleScannerClass.getSimpleName(), e.getMessage());
 				nLoaded --;
+				excOccurred = true;
 			}
 		}
 		logger.info("{} plugins loaded.", nLoaded);
+		if (excOccurred) {
+			throw new ScannerProviderException("Errors occurred while loading scanners");
+		}
 		return triangleScanners;
 	}
 

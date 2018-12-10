@@ -17,11 +17,11 @@ public abstract class TriangleScanner {
 	
 	public final void init(Triangle triangle) {
 		this.triangle = triangle;
-		Map<String,Double> dataList = triangle.getDataMap();
-		Set<String> dataNameList = dataList.keySet();
+		Map<String,Double> triangleData = triangle.getDataMap();
+		Set<String> triangleDataNames = triangleData.keySet();
 		List<String> inputList = getInputParams();
-		for (String dataName: dataNameList) {
-			if (inputList.contains(dataName) && dataList.get(dataName)!=null) {
+		for (String dataName: triangleDataNames) {
+			if (inputList.contains(dataName) && triangleData.get(dataName)!=null) {
 				inputList.remove(dataName);
 			}
 		}
